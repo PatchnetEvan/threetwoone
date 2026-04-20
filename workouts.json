@@ -1,0 +1,47 @@
+{
+  "2026-04-20": {
+    "title": "Fran",
+    "description": "21-15-9\nThrusters (95/65)\nPull-ups",
+    "timer": { "preset": "forTime", "cap": 900 }
+  },
+  "2026-04-19": {
+    "title": "Fight Gone Bad",
+    "description": "3 rounds, 1 minute at each station:\nWall Balls (20/14)\nSumo Deadlift High Pull (75/55)\nBox Jumps (20\")\nPush Press (75/55)\nRow (calories)\nRest 1 minute between rounds.\nScore = total reps/calories.",
+    "timer": {
+      "preset": "circuit",
+      "rounds": 3,
+      "restBetweenRounds": 60,
+      "segments": [
+        { "label": "Wall Balls", "seconds": 60, "kind": "station" },
+        { "label": "SDHP", "seconds": 60, "kind": "station" },
+        { "label": "Box Jumps", "seconds": 60, "kind": "station" },
+        { "label": "Push Press", "seconds": 60, "kind": "station" },
+        { "label": "Row", "seconds": 60, "kind": "station" }
+      ]
+    }
+  },
+  "2026-04-18": {
+    "title": "EMOM 10",
+    "description": "EMOM 10 minutes:\n10 Burpees\nRest in remaining time.",
+    "timer": {
+      "preset": "emom",
+      "rounds": 10,
+      "interval": 60
+    }
+  },
+  "2026-04-17": {
+    "title": "Cindy",
+    "description": "AMRAP 20:\n5 Pull-ups\n10 Push-ups\n15 Air Squats",
+    "timer": { "preset": "amrap", "cap": 1200 }
+  },
+  "2026-04-16": {
+    "title": "Tabata Squats",
+    "description": "Tabata Air Squats\n8 rounds: 20s work / 10s rest.\nScore = lowest rep count.",
+    "timer": {
+      "preset": "intervals",
+      "rounds": 8,
+      "work": 20,
+      "rest": 10
+    }
+  }
+}

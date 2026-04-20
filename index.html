@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>boxclock</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app" class="app" data-kind="idle">
+    <section class="timer-area" aria-live="polite">
+      <div id="timer" class="timer" aria-label="Timer">20:00</div>
+      <div class="status-line">
+        <span id="segment-label" class="segment-label">Ready</span>
+        <span id="round-info" class="round-info" hidden></span>
+      </div>
+    </section>
+
+    <section class="workout-area">
+      <div class="workout-date" id="workout-date"></div>
+      <h1 id="workout-title" class="workout-title">No workout loaded</h1>
+      <pre id="workout-body" class="workout-body"></pre>
+    </section>
+
+    <nav class="controls" aria-label="Timer controls">
+      <button id="btn-start" class="btn btn-primary" type="button">Start</button>
+      <button id="btn-pause" class="btn" type="button" disabled>Pause</button>
+      <button id="btn-reset" class="btn" type="button">Reset</button>
+      <button id="btn-config" class="btn" type="button">Config</button>
+      <button id="btn-mute" class="btn" type="button" aria-pressed="false">Sound On</button>
+    </nav>
+
+    <nav class="day-nav" aria-label="Day navigation">
+      <button id="btn-prev" class="btn" type="button" aria-label="Previous day">&#9664; Prev</button>
+      <button id="btn-today" class="btn" type="button">Today</button>
+      <button id="btn-next" class="btn" type="button" aria-label="Next day">Next &#9654;</button>
+    </nav>
+
+    <section class="paste-area">
+      <label for="paste-box" class="paste-label">Paste a workout for today</label>
+      <textarea id="paste-box" class="paste-box" rows="4" placeholder="Title on first line, then description..."></textarea>
+      <div class="paste-actions">
+        <button id="btn-paste-save" class="btn" type="button">Save for Today</button>
+        <button id="btn-paste-copy" class="btn" type="button">Copy as JSON</button>
+        <button id="btn-paste-clear" class="btn" type="button">Clear</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="config-dialog" class="config-dialog" aria-labelledby="config-title">
+    <form method="dialog" class="config-form" id="config-form">
+      <h2 id="config-title">Timer Config</h2>
+
+      <div class="preset-grid" role="tablist" aria-label="Timer presets">
+        <button type="button" class="preset-btn" data-preset="amrap" data-index="1">1. AMRAP</button>
+        <button type="button" class="preset-btn" data-preset="forTime" data-index="2">2. For Time</button>
+        <button type="button" class="preset-btn" data-preset="emom" data-index="3">3. EMOM</button>
+        <button type="button" class="preset-btn" data-preset="intervals" data-index="4">4. Intervals</button>
+        <button type="button" class="preset-btn" data-preset="stopwatch" data-index="5">5. Stopwatch</button>
+        <button type="button" class="preset-btn" data-preset="circuit" data-index="6">6. Circuit</button>
+      </div>
+
+      <div id="config-fields" class="config-fields"></div>
+
+      <div class="config-actions">
+        <button type="button" id="btn-config-save" class="btn btn-primary">Save</button>
+        <button type="button" id="btn-config-cancel" class="btn">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

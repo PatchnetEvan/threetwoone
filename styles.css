@@ -1,0 +1,360 @@
+:root {
+  --bg: #0a0a0a;
+  --fg: #ffffff;
+  --muted: #a1a1aa;
+  --panel: #141418;
+  --border: #27272a;
+  --accent: #ffffff;
+  --accent-work: #ef4444;
+  --accent-rest: #22c55e;
+  --accent-station: #3b82f6;
+  --focus: #fde047;
+  --safe: 5vh 5vw;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body {
+  /* TV overscan safe area */
+  padding: var(--safe);
+}
+
+.app {
+  display: grid;
+  grid-template-rows: auto auto auto auto auto;
+  gap: clamp(1rem, 2vh, 2rem);
+  max-width: 1600px;
+  margin: 0 auto;
+  transition: --accent 400ms ease;
+}
+
+/* --- Timer --- */
+
+.timer-area {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.timer {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(8rem, 22vw, 20rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  transition: color 250ms ease;
+  text-shadow: 0 0 40px rgba(255,255,255,0.05);
+}
+
+.status-line {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: clamp(1rem, 3vw, 3rem);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.segment-label {
+  font-size: clamp(1.5rem, 3vw, 3rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  transition: color 250ms ease;
+}
+
+.round-info {
+  font-size: clamp(1rem, 2vw, 2rem);
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Segment-kind accents */
+.app[data-kind="work"]    { --accent: var(--accent-work); }
+.app[data-kind="rest"]    { --accent: var(--accent-rest); }
+.app[data-kind="station"] { --accent: var(--accent-station); }
+.app[data-kind="done"]    { --accent: var(--accent-rest); }
+.app[data-kind="pre"]     { --accent: var(--focus); }
+
+/* Pulsing in last 3 seconds of a segment */
+.app[data-warn="true"] .timer { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* --- Workout card --- */
+
+.workout-area {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  text-align: center;
+}
+
+.workout-date {
+  font-size: clamp(0.9rem, 1.4vw, 1.25rem);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.25rem;
+}
+
+.workout-title {
+  font-size: clamp(2rem, 4vw, 4rem);
+  margin: 0 0 0.5rem 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.workout-body {
+  font-size: clamp(1.25rem, 2vw, 2.5rem);
+  white-space: pre-wrap;
+  margin: 0;
+  font-family: inherit;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+/* --- Buttons --- */
+
+.controls, .day-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  justify-content: center;
+}
+
+.btn {
+  appearance: none;
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: clamp(0.75rem, 1.5vh, 1.25rem) clamp(1rem, 2.5vw, 2rem);
+  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 7rem;
+  min-height: 3.5rem;
+  transition: transform 100ms ease, border-color 150ms ease, background 150ms ease;
+  font-family: inherit;
+}
+
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+
+.btn:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 3px;
+  border-color: var(--focus);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.btn-primary:hover:not(:disabled) { border-color: var(--focus); }
+
+/* --- Paste box --- */
+
+.paste-area {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.paste-label {
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.paste-box {
+  width: 100%;
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.paste-box:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--focus);
+}
+
+.paste-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* --- Config dialog --- */
+
+.config-dialog {
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--border);
+  border-radius: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  max-width: min(90vw, 700px);
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.config-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.config-dialog h2 {
+  margin: 0 0 1rem 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.preset-btn {
+  appearance: none;
+  background: var(--bg);
+  color: var(--fg);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.preset-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.preset-btn[aria-selected="true"] {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.config-fields {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-fields label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+}
+
+.config-fields .hint {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+.config-fields input[type="number"],
+.config-fields input[type="text"] {
+  background: var(--bg);
+  color: var(--fg);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font-size: clamp(1rem, 1.4vw, 1.1rem);
+  font-family: inherit;
+}
+
+.config-fields input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--focus);
+}
+
+.stations-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.station-row {
+  display: grid;
+  grid-template-columns: 1fr 6rem auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.station-row input[type="text"] { min-width: 0; }
+
+.station-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-sm {
+  min-width: auto;
+  min-height: auto;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.config-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 640px) {
+  :root { --safe: 2vh 3vw; }
+  .timer { font-size: clamp(5rem, 28vw, 10rem); }
+  .btn { min-width: 5.5rem; }
+  .station-row { grid-template-columns: 1fr 5rem auto; }
+}
+
+@media (min-width: 1200px) {
+  /* Likely a TV — keep generous spacing */
+  .controls, .day-nav { gap: 1.25rem; }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .app[data-warn="true"] .timer { animation: none; }
+  * { transition: none !important; }
+}
