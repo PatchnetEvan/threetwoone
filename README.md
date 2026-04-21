@@ -143,21 +143,45 @@ The control panel has a textarea for ad-hoc workouts:
 
 ---
 
-## Cloudflare Pages deployment
+## Cloudflare deployment
+
+Deploys via **Cloudflare Workers Static Assets** using the bundled
+`wrangler.jsonc`. The whole repo is served as static files; there's
+no build step.
 
 1. Push this repo to GitHub.
-2. In the Cloudflare dashboard → **Workers & Pages** → **Create
-   application** → **Pages** → **Connect to Git**.
-3. Select the repo. For the build config:
-   - **Framework preset:** None
-   - **Build command:** *(leave blank)*
-   - **Build output directory:** `/`
+2. In the Cloudflare dashboard → **Workers & Pages** → **Create** →
+   connect the Git repo.
+3. Cloudflare will auto-detect the `wrangler.jsonc` and use:
+   - **Deploy command:** `npx wrangler versions upload`
+   - **Assets directory:** `./` (set in `wrangler.jsonc`)
 4. **Save and Deploy.** The first build publishes to a URL like
-   `https://boxclock.pages.dev`. Every push to `main` auto-deploys.
+   `https://boxclock.<account>.workers.dev`. Every push to `main`
+   auto-deploys.
+
+The `wrangler.jsonc` at the repo root is the minimum required
+config:
+
+```jsonc
+{
+  "name": "boxclock",
+  "compatibility_date": "2026-04-21",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "single-page-application"
+  }
+}
+```
 
 No environment variables are needed. The site is fully static and
-works offline after the first load (browser cache handles the
-handful of files).
+works offline after the first load.
+
+### Deploying manually
+
+```
+npx wrangler versions upload      # preview
+npx wrangler deploy               # production
+```
 
 ---
 
