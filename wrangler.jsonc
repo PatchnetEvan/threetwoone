@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
-  "name": "boxclock",
+  "name": "threetwoone",
   "main": "src/worker.js",
   "compatibility_date": "2026-04-21",
   "assets": {
