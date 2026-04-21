@@ -1,9 +1,37 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
   "name": "boxclock",
+  "main": "src/worker.js",
   "compatibility_date": "2026-04-21",
   "assets": {
-    "directory": "./",
+    "directory": "./public",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
+  },
+
+  // ── Production bindings ─────────────────────────────────────────
+  //
+  // Replace the KV namespace id below with the real id from:
+  //   npx wrangler kv namespace create WOD
+  // Same for the preview namespace:
+  //   npx wrangler kv namespace create WOD --preview
+  //
+  // ACCESS_AUD is the Application Audience (AUD) tag from the
+  // Cloudflare Access app you create to gate /api/admin/*. Copy it
+  // from: Zero Trust → Access → Applications → your app → Overview.
+  //
+  // ACCESS_TEAM_DOMAIN is your team's subdomain (just the part
+  // before .cloudflareaccess.com). Find it at: Zero Trust →
+  // Settings → Custom Pages → Team domain.
+  "kv_namespaces": [
+    {
+      "binding": "WOD",
+      "id": "REPLACE_WITH_PROD_KV_ID",
+      "preview_id": "REPLACE_WITH_PREVIEW_KV_ID"
+    }
+  ],
+  "vars": {
+    "ACCESS_AUD": "REPLACE_WITH_ACCESS_AUD_TAG",
+    "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_TEAM_SUBDOMAIN"
   }
 }

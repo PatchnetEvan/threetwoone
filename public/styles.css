@@ -225,7 +225,29 @@ body {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
 }
+
+/* --- Admin area (only visible with ?admin=1) --- */
+
+.admin-area {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem;
+  border: 2px dashed var(--accent-work);
+  border-radius: 0.75rem;
+}
+
+.admin-status {
+  color: var(--muted);
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  margin-left: 0.5rem;
+}
+.admin-status[data-state="ok"]   { color: var(--accent-rest); }
+.admin-status[data-state="err"]  { color: var(--accent-work); }
 
 /* --- Config dialog --- */
 
