@@ -3,6 +3,9 @@
   "name": "threetwoone",
   "main": "src/worker.js",
   "compatibility_date": "2026-04-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
@@ -11,28 +14,25 @@
 
   // ── Production bindings ─────────────────────────────────────────
   //
-  // Replace the KV namespace id below with the real id from:
-  //   npx wrangler kv namespace create WOD
-  // Same for the preview namespace:
-  //   npx wrangler kv namespace create WOD --preview
+  // `binding` must stay "WOD" — the Worker reads env.WOD directly.
+  // `id` is the production KV namespace (live site).
+  // `preview_id` is the separate namespace used by preview deploys
+  // and `wrangler dev`, so feature branches don't touch production.
   //
   // ACCESS_AUD is the Application Audience (AUD) tag from the
-  // Cloudflare Access app you create to gate /api/admin/*. Copy it
-  // from: Zero Trust → Access → Applications → your app → Overview.
+  // Cloudflare Access app that gates /api/admin/*. Copy it from:
+  // Zero Trust → Access → Applications → your app → Overview.
   //
   // ACCESS_TEAM_DOMAIN is your team's subdomain (just the part
   // before .cloudflareaccess.com). Find it at: Zero Trust →
   // Settings → Custom Pages → Team domain.
-  "kv_namespaces": [{
-                    "binding": "KV_BINDING",
-                    "id": "fac81e3a4de146c6ba3657a43cd70435"
-                 }]
-				 
-				 
-				 "kv_namespaces": [{
-                    "binding": "KV_BINDING",
-                    "id": "d8abe52875db4e06a7a82a87afab6225"
-                 }]
+  "kv_namespaces": [
+    {
+      "binding": "WOD",
+      "id": "fac81e3a4de146c6ba3657a43cd70435",
+      "preview_id": "d8abe52875db4e06a7a82a87afab6225"
+    }
+  ],
   "vars": {
     "ACCESS_AUD": "REPLACE_WITH_ACCESS_AUD_TAG",
     "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_TEAM_SUBDOMAIN"
