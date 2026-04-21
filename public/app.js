@@ -434,8 +434,13 @@ state.engine.onEvent = ev => {
     case "preBeep":  Audio.countdownBeep(ev.remaining); break;
     case "go":       Audio.longTone(); break;
     case "segBeep":  Audio.countdownBeep(ev.remaining); break;
+    // Hybrid transition audio: station→station stays a single short beep so
+    // you can hear "keep going, just a new station." Round boundaries and
+    // workout completion get the long tone — same emphatic cue as the
+    // pre-start "go" — because those are the moments you actually care
+    // about without looking at the screen.
     case "stationTransition": Audio.shortBeep(); break;
-    case "roundTransition":   Audio.doubleBeep(); break;
+    case "roundTransition":   Audio.longTone(); break;
     case "complete": Audio.longTone(); break;
   }
 };
