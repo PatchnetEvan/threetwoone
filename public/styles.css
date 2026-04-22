@@ -230,6 +230,9 @@ body {
 
 /* --- Admin area (only visible with ?admin=1) --- */
 
+/* [hidden] must win over display: grid below. */
+.admin-area[hidden] { display: none; }
+
 .admin-area {
   display: grid;
   gap: 0.5rem;
