@@ -228,6 +228,10 @@ class TimerEngine {
       kind = "work";
     }
 
+    // While idle (loaded but not started), keep the neutral accent so
+    // the timer doesn't read as "alarming red" before you press Start.
+    if (this.status === "idle") kind = "idle";
+
     this.onTick({
       status: this.status,
       displaySeconds,
@@ -836,6 +840,7 @@ async function boot() {
   state.isAdmin = params.has("admin");
   if (state.isAdmin) {
     $("#admin-area").hidden = false;
+    $("#admin-banner").hidden = false;
     $("#btn-admin-publish").addEventListener("click", adminPublish);
     $("#btn-admin-delete").addEventListener("click", adminDelete);
   }
