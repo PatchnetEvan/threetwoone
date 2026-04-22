@@ -160,14 +160,17 @@ the page falls back to whatever the owner published (or the seed).
 **Copy as JSON** gives you a snippet you can paste into
 `workouts.json` if you want to persist it to git history.
 
-### Admin publish (`?admin=1`)
+### Admin publish (`/admin`)
 
-Visit `https://threetwone.com/?admin=1` to reveal a second
-textarea. Hitting **Publish** POSTs to `/api/admin/wod`, which is
-gated by Cloudflare Access. If you're already logged into the same
-Access identity as your other site, publishing is seamless — no
-password prompt, no token. **Unpublish** deletes the KV entry for
-the currently-browsed date.
+Visit `https://threetwone.com/admin`. Cloudflare Access intercepts
+the request and sends you through your identity provider. Once
+authenticated, the admin panel appears — a second textarea plus
+**Publish** / **Unpublish** buttons.
+
+**Publish** POSTs to `/api/admin/wod`, which is independently gated
+by the same Access policy. Double-gated: you need a valid Access
+session both to see the admin page and to write to the API.
+**Unpublish** deletes the KV entry for the currently-browsed date.
 
 Only the date being browsed gets published, so you can backfill
 yesterday or schedule tomorrow by navigating with ◀ / ▶ first.
@@ -194,7 +197,9 @@ npx wrangler kv namespace create WOD --preview
 ### Cloudflare Access (owner auth)
 
 1. **Zero Trust → Access → Applications → Add an application → Self-hosted.**
-2. Application domain: `threetwone.com` with path `/api/admin/*`.
+2. Application domains — add **both**:
+   - `threetwone.com` with path `/admin*` (gates the admin UI)
+   - `threetwone.com` with path `/api/admin/*` (gates the write API)
 3. Identity provider: whatever you already use on the other site.
 4. Policy: `Include → Emails → your@email.com` (or whatever rule
    you already have set up).
