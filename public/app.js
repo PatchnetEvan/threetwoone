@@ -833,11 +833,12 @@ async function boot() {
   $("#btn-mute").textContent = Audio.muted ? "Sound Off" : "Sound On";
   $("#btn-mute").setAttribute("aria-pressed", String(Audio.muted));
 
-  // Admin mode is a URL flag. Access still gates the actual API — the
-  // flag just reveals the UI. Non-admins who flip the flag see the form
-  // but any publish attempt gets 401 from the edge.
-  const params = new URLSearchParams(location.search);
-  state.isAdmin = params.has("admin");
+  // Admin mode is scoped to the /admin path, which is Access-gated at
+  // the edge. Unauthenticated visitors never reach this code — Access
+  // redirects them to login first. The Worker also re-verifies the
+  // JWT on every write, so even if the UI loaded somehow, publishing
+  // without a valid Access session still 401s.
+  state.isAdmin = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
   if (state.isAdmin) {
     $("#admin-area").hidden = false;
     $("#admin-banner").hidden = false;
