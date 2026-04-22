@@ -387,12 +387,14 @@ const shiftDate = (key, delta) => {
 
 // ── State
 const state = {
-  workouts: {},           // from workouts.json
+  workouts: {},           // from workouts.json (seed/fallback)
+  serverWorkouts: {},     // { "YYYY-MM-DD": entry } from KV via /api/wod
   currentDate: todayKey(),
   engine: new TimerEngine(),
   activePreset: "amrap",
   presetParams: {},       // persisted last-used params per preset
-  pastedToday: null,      // { title, description }
+  pastedToday: null,      // { title, description } — local override
+  isAdmin: false,         // true when ?admin=1 is in the URL
 };
 
 // ── Persistence
@@ -432,17 +434,28 @@ state.engine.onEvent = ev => {
     case "preBeep":  Audio.countdownBeep(ev.remaining); break;
     case "go":       Audio.longTone(); break;
     case "segBeep":  Audio.countdownBeep(ev.remaining); break;
+    // Hybrid transition audio: station→station stays a single short beep so
+    // you can hear "keep going, just a new station." Round boundaries and
+    // workout completion get the long tone — same emphatic cue as the
+    // pre-start "go" — because those are the moments you actually care
+    // about without looking at the screen.
     case "stationTransition": Audio.shortBeep(); break;
-    case "roundTransition":   Audio.doubleBeep(); break;
+    case "roundTransition":   Audio.longTone(); break;
     case "complete": Audio.longTone(); break;
   }
 };
 
 // ── Workout rendering
+// Render priority per date, highest to lowest:
+//   1. Local paste-box override (today only, localStorage)
+//   2. Server-published WOD from KV (state.serverWorkouts[key])
+//   3. Seeded workouts.json (state.workouts[key])
+//   4. Empty state
 function renderWorkout() {
   const key = state.currentDate;
   const fromPaste = (key === todayKey() && state.pastedToday) ? state.pastedToday : null;
-  const entry = fromPaste || state.workouts[key] || null;
+  const fromServer = state.serverWorkouts[key] || null;
+  const entry = fromPaste || fromServer || state.workouts[key] || null;
 
   $("#workout-date").textContent = key === todayKey() ? `Today — ${key}` : key;
 
@@ -452,7 +465,22 @@ function renderWorkout() {
     if (entry.timer && !fromPaste) applyTimer(entry.timer);
   } else {
     $("#workout-title").textContent = "No workout for this day";
-    $("#workout-body").textContent = "Paste one below, or use ◀ / ▶ to browse history.";
+    $("#workout-body").textContent = "Paste your own below, or use ◀ / ▶ to browse history.";
+  }
+}
+
+// Fetch the server-published workout for a date and swap it into the
+// render if present. Silent on network failure — the workouts.json
+// fallback stays on screen.
+async function fetchServerWorkout(date) {
+  try {
+    const res = await fetch(`/api/wod?date=${date}`, { cache: "no-store" });
+    if (res.status === 404) { delete state.serverWorkouts[date]; return; }
+    if (!res.ok) return;
+    const entry = await res.json();
+    state.serverWorkouts[date] = entry;
+  } catch {
+    // Network hiccup / offline — leave whatever we have cached in memory.
   }
 }
 
@@ -475,9 +503,15 @@ $("#btn-reset").addEventListener("click", () => state.engine.reset());
 $("#btn-config").addEventListener("click", openConfig);
 $("#btn-mute").addEventListener("click", toggleMute);
 
-$("#btn-prev").addEventListener("click", () => { state.currentDate = shiftDate(state.currentDate, -1); renderWorkout(); });
-$("#btn-next").addEventListener("click", () => { state.currentDate = shiftDate(state.currentDate, +1); renderWorkout(); });
-$("#btn-today").addEventListener("click", () => { state.currentDate = todayKey(); renderWorkout(); });
+async function gotoDate(date) {
+  state.currentDate = date;
+  renderWorkout();
+  await fetchServerWorkout(date);
+  renderWorkout();
+}
+$("#btn-prev").addEventListener("click", () => gotoDate(shiftDate(state.currentDate, -1)));
+$("#btn-next").addEventListener("click", () => gotoDate(shiftDate(state.currentDate, +1)));
+$("#btn-today").addEventListener("click", () => gotoDate(todayKey()));
 
 // ── Paste box
 $("#btn-paste-save").addEventListener("click", () => {
@@ -709,10 +743,10 @@ document.addEventListener("keydown", e => {
     case "r": case "R": state.engine.reset(); break;
     case "m": case "M": toggleMute(); break;
     case "ArrowLeft":
-      if (!$("#config-dialog").open) { state.currentDate = shiftDate(state.currentDate, -1); renderWorkout(); }
+      if (!$("#config-dialog").open) gotoDate(shiftDate(state.currentDate, -1));
       break;
     case "ArrowRight":
-      if (!$("#config-dialog").open) { state.currentDate = shiftDate(state.currentDate, +1); renderWorkout(); }
+      if (!$("#config-dialog").open) gotoDate(shiftDate(state.currentDate, +1));
       break;
     case "Escape":
       if ($("#config-dialog").open) $("#config-dialog").close();
@@ -727,12 +761,84 @@ document.addEventListener("keydown", e => {
   }
 });
 
+// ── Admin (publish / unpublish via Cloudflare Access-gated Worker routes)
+// Credentials are handled entirely by Access cookies; there is no bearer
+// token in this file. If Access isn't configured, POST/DELETE return 401
+// and we surface the error to the admin.
+
+function setAdminStatus(msg, state = "") {
+  const el = $("#admin-status");
+  if (!el) return;
+  el.textContent = msg;
+  if (state) el.dataset.state = state;
+  else delete el.dataset.state;
+}
+
+async function adminPublish() {
+  const raw = $("#admin-box").value.trim();
+  if (!raw) { setAdminStatus("Nothing to publish.", "err"); return; }
+  const [first, ...rest] = raw.split("\n");
+  const date = state.currentDate;
+  setAdminStatus("Publishing…");
+  try {
+    const res = await fetch("/api/admin/wod", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        date,
+        title: first.trim() || "Workout",
+        description: rest.join("\n").trim(),
+      }),
+    });
+    if (res.status === 401) { setAdminStatus("Not authorized. Log in via Access first.", "err"); return; }
+    if (!res.ok) { setAdminStatus(`Failed: ${res.status}`, "err"); return; }
+    const { entry } = await res.json();
+    state.serverWorkouts[date] = entry;
+    renderWorkout();
+    setAdminStatus(`Published for ${date}.`, "ok");
+  } catch (err) {
+    // Keep the textarea populated so the admin can retry without retyping.
+    setAdminStatus(`Network error: ${err.message || err}`, "err");
+  }
+}
+
+async function adminDelete() {
+  const date = state.currentDate;
+  if (!confirm(`Unpublish the workout for ${date}?`)) return;
+  setAdminStatus("Unpublishing…");
+  try {
+    const res = await fetch(`/api/admin/wod?date=${date}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.status === 401) { setAdminStatus("Not authorized.", "err"); return; }
+    if (!res.ok) { setAdminStatus(`Failed: ${res.status}`, "err"); return; }
+    delete state.serverWorkouts[date];
+    renderWorkout();
+    setAdminStatus(`Unpublished ${date}.`, "ok");
+  } catch (err) {
+    setAdminStatus(`Network error: ${err.message || err}`, "err");
+  }
+}
+
 // ── Boot
 async function boot() {
   Audio.init();
   loadPersisted();
   $("#btn-mute").textContent = Audio.muted ? "Sound Off" : "Sound On";
   $("#btn-mute").setAttribute("aria-pressed", String(Audio.muted));
+
+  // Admin mode is a URL flag. Access still gates the actual API — the
+  // flag just reveals the UI. Non-admins who flip the flag see the form
+  // but any publish attempt gets 401 from the edge.
+  const params = new URLSearchParams(location.search);
+  state.isAdmin = params.has("admin");
+  if (state.isAdmin) {
+    $("#admin-area").hidden = false;
+    $("#btn-admin-publish").addEventListener("click", adminPublish);
+    $("#btn-admin-delete").addEventListener("click", adminDelete);
+  }
 
   try {
     // Runs both from file:// (opened directly) and via http:// (static host).
@@ -743,10 +849,16 @@ async function boot() {
     state.workouts = {};
   }
 
+  // First render uses workouts.json as the initial fallback so the page
+  // isn't blank while we hit KV.
   renderWorkout();
 
-  // If today has no timer from the workout entry, load the last-used preset.
-  const todayEntry = state.workouts[todayKey()];
+  // Fetch today's server-published workout; swap it in if present.
+  await fetchServerWorkout(todayKey());
+  renderWorkout();
+
+  // If today has no timer from the rendered entry, load the last-used preset.
+  const todayEntry = state.serverWorkouts[todayKey()] || state.workouts[todayKey()];
   if (!todayEntry || !todayEntry.timer) {
     applyTimer({ preset: state.activePreset, ...(state.presetParams[state.activePreset] || {}) });
   }

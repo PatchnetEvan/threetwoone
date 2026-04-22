@@ -38,12 +38,22 @@
     </nav>
 
     <section class="paste-area">
-      <label for="paste-box" class="paste-label">Paste a workout for today</label>
+      <label for="paste-box" class="paste-label">Use your own workout (this device only)</label>
       <textarea id="paste-box" class="paste-box" rows="4" placeholder="Title on first line, then description..."></textarea>
       <div class="paste-actions">
-        <button id="btn-paste-save" class="btn" type="button">Save for Today</button>
+        <button id="btn-paste-save" class="btn" type="button">Use This Workout</button>
         <button id="btn-paste-copy" class="btn" type="button">Copy as JSON</button>
-        <button id="btn-paste-clear" class="btn" type="button">Clear</button>
+        <button id="btn-paste-clear" class="btn" type="button">Remove My Override</button>
+      </div>
+    </section>
+
+    <section class="admin-area" id="admin-area" hidden>
+      <label for="admin-box" class="paste-label">Admin — publish for everyone</label>
+      <textarea id="admin-box" class="paste-box" rows="4" placeholder="Title on first line, then description..."></textarea>
+      <div class="paste-actions">
+        <button id="btn-admin-publish" class="btn btn-primary" type="button">Publish</button>
+        <button id="btn-admin-delete" class="btn" type="button">Unpublish</button>
+        <span id="admin-status" class="admin-status" aria-live="polite"></span>
       </div>
     </section>
   </main>
