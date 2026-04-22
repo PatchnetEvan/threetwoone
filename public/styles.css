@@ -228,6 +228,25 @@ body {
   align-items: center;
 }
 
+/* --- Admin mode banner (only visible with ?admin=1) --- */
+
+.admin-banner[hidden] { display: none; }
+
+.admin-banner {
+  /* Negative margin escapes the body's safe-area padding so the bar
+     spans the full viewport. Inner padding keeps the text inside the
+     5% TV-safe zone. */
+  margin: -5vh -5vw 1.5rem;
+  padding: 0.6rem 5vw;
+  background: var(--accent-work);
+  color: #fff;
+  text-align: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+}
+
 /* --- Admin area (only visible with ?admin=1) --- */
 
 /* [hidden] must win over display: grid below. */

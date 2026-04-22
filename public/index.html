@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="admin-banner" class="admin-banner" hidden>Admin Mode &middot; Publish enabled</div>
   <main id="app" class="app" data-kind="idle">
     <section class="timer-area" aria-live="polite">
       <div id="timer" class="timer" aria-label="Timer">20:00</div>
@@ -41,7 +42,7 @@
       <label for="paste-box" class="paste-label">Use your own workout (this device only)</label>
       <textarea id="paste-box" class="paste-box" rows="4" placeholder="Title on first line, then description..."></textarea>
       <div class="paste-actions">
-        <button id="btn-paste-save" class="btn" type="button">Use This Workout</button>
+        <button id="btn-paste-save" class="btn btn-primary" type="button">Use This Workout</button>
         <button id="btn-paste-copy" class="btn" type="button">Copy as JSON</button>
         <button id="btn-paste-clear" class="btn" type="button">Remove My Override</button>
       </div>
