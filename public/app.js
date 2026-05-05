@@ -583,9 +583,14 @@ function toggleMute() {
 }
 
 // ── Config panel
+// CONFIG_FIELDS describes the controls each preset shows in the
+// config dialog. `unit: "min"` means the input is in decimal minutes
+// (e.g., 1.5 = 90s) but the value still stores in seconds for the
+// engine — conversion happens in the field render/save code below.
+// Defaults for "min" fields are written in minutes for readability.
 const CONFIG_FIELDS = {
-  amrap: [{ key: "cap", label: "Cap (seconds)", type: "number", default: 1200 }],
-  forTime: [{ key: "cap", label: "Cap (seconds, 0 = no cap)", type: "number", default: 0 }],
+  amrap: [{ key: "cap", label: "Cap (minutes)", type: "number", default: 20, unit: "min" }],
+  forTime: [{ key: "cap", label: "Cap (minutes, 0 = no cap)", type: "number", default: 0, unit: "min" }],
   emom: [
     { key: "rounds", label: "Rounds", type: "number", default: 10 },
     { key: "interval", label: "Every N seconds (60/120/180)", type: "number", default: 60 },
@@ -625,12 +630,22 @@ function renderConfigFields(preset) {
   const fields = CONFIG_FIELDS[preset] || [];
 
   for (const f of fields) {
-    const val = configDraft[f.key] ?? f.default;
+    // For min-unit fields the engine value is in seconds but the
+    // input is in minutes — convert in both directions at the boundary.
+    const isMin = f.unit === "min";
+    const storedSeconds = configDraft[f.key] ?? (isMin ? f.default * 60 : f.default);
+    const displayVal = isMin ? storedSeconds / 60 : storedSeconds;
+
     const lbl = document.createElement("label");
     const input = document.createElement("input");
     input.type = f.type;
-    input.value = val;
-    input.addEventListener("input", () => { configDraft[f.key] = Number(input.value); updateHints(); });
+    if (isMin) { input.step = "0.1"; input.min = "0"; }
+    input.value = displayVal;
+    input.addEventListener("input", () => {
+      const n = Number(input.value);
+      configDraft[f.key] = isMin ? Math.round(n * 60) : n;
+      updateHints();
+    });
     lbl.append(document.createTextNode(f.label + " "));
     lbl.append(input);
     const hint = document.createElement("span");
