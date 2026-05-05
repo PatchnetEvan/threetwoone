@@ -20,7 +20,10 @@
 // All pure state math — no DOM access in this section.
 
 const TICK_MS = 100;
-const PRE_START_SECS = 3; // "3, 2, 1, go"
+// 10-second pre-start gives athletes time to get into setup positions.
+// The first 7 seconds are silent (just the visual countdown); the last 3
+// fire the rising-pitch "3, 2, 1" beeps, then the long tone at "go".
+const PRE_START_SECS = 10;
 
 class TimerEngine {
   constructor() {
@@ -123,7 +126,8 @@ class TimerEngine {
       const prev = Math.ceil(this.preCountdown);
       this.preCountdown -= dt;
       const cur = Math.ceil(this.preCountdown);
-      if (cur < prev && cur >= 1) {
+      // Silent first 7s, audible 3-2-1 in the final stretch.
+      if (cur < prev && cur >= 1 && cur <= 3) {
         this.onEvent({ type: "preBeep", remaining: cur });
       }
       if (this.preCountdown <= 0) {
