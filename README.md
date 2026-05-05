@@ -204,10 +204,15 @@ npx wrangler kv namespace create WOD --preview
 4. Policy: `Include → Emails → your@email.com` (or whatever rule
    you already have set up).
 5. Session duration: `24 hours`.
-6. **After saving, copy the AUD tag** (Overview tab) into
-   `wrangler.jsonc → vars.ACCESS_AUD`.
-7. Copy your **Team subdomain** (the thing before
-   `.cloudflareaccess.com`) into `vars.ACCESS_TEAM_DOMAIN`.
+6. **Set ACCESS_AUD and ACCESS_TEAM_DOMAIN as Worker secrets**
+   (not committed to git):
+   - Cloudflare dashboard → **Workers & Pages → threetwoone →
+     Settings → Variables and Secrets → Add**
+   - Type: **Secret**, Name: `ACCESS_AUD`, Value: the AUD tag
+     from the Access app's Overview tab. Save.
+   - Repeat for `ACCESS_TEAM_DOMAIN`, value: just the subdomain
+     before `.cloudflareaccess.com`.
+   - Secrets persist across deploys; you only set them once.
 
 `/api/wod` (the public read) is **not** gated by Access — only
 `/api/admin/*` paths.
