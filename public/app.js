@@ -156,7 +156,20 @@ class TimerEngine {
       return;
     }
 
-    if (this.flat.length === 0) return; // open-ended (stopwatch / For Time no cap)
+    if (this.flat.length === 0) {
+      // Non-segmented capped timers (AMRAP, For Time with cap):
+      // fire rising-pitch 3-2-1 beeps in the final 3 seconds before
+      // the cap triggers _finish. Without this they hit the cap in
+      // silence and the long tone arrives unannounced.
+      if (cfg.totalCap) {
+        const prev = Math.ceil(cfg.totalCap - (this.totalElapsed - dt));
+        const cur = Math.ceil(cfg.totalCap - this.totalElapsed);
+        if (cur < prev && cur <= 3 && cur >= 1) {
+          this.onEvent({ type: "segBeep", remaining: cur });
+        }
+      }
+      return; // open-ended path stops here (stopwatch, For Time no cap)
+    }
 
     const seg = this.flat[this.segIndex];
     const prevRemaining = Math.ceil(seg.seconds - this.segElapsed);
@@ -223,7 +236,9 @@ class TimerEngine {
       roundText = `Round ${seg.round}/${seg.totalRounds}`;
     } else if (cfg.direction === "down" && cfg.totalCap) {
       displaySeconds = Math.max(0, Math.ceil(cfg.totalCap - this.totalElapsed));
-      label = cfg.preset === "amrap" ? "AMRAP" : "Work";
+      label = cfg.preset === "amrap"   ? "AMRAP"
+            : cfg.preset === "forTime" ? "For Time"
+            :                            "Work";
       kind = "work";
     } else {
       // Stopwatch / For Time without cap
@@ -253,7 +268,10 @@ function buildConfig(preset, p = {}) {
     case "amrap":
       return { preset, direction: "down", totalCap: p.cap ?? 1200 };
     case "forTime":
-      return { preset, direction: "up", totalCap: p.cap || null };
+      // For Time WITH a cap counts down from the cap so athletes
+      // see time remaining, not elapsed (you're racing the clock).
+      // For Time WITHOUT a cap is open-ended count-up (stopwatch-like).
+      return { preset, direction: p.cap ? "down" : "up", totalCap: p.cap || null };
     case "emom": {
       const rounds = p.rounds ?? 10;
       const interval = p.interval ?? 60;

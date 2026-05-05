@@ -60,7 +60,7 @@ in `localStorage`.
 | Key | Preset     | Defaults                    |
 |-----|------------|-----------------------------|
 | 1   | AMRAP      | 20:00 countdown             |
-| 2   | For Time   | Count-up, optional cap      |
+| 2   | For Time   | Count-down from cap, or count-up if no cap |
 | 3   | EMOM       | 10 rounds × 60s             |
 | 4   | Intervals  | 8 × 20s/10s (Tabata button) |
 | 5   | Stopwatch  | Count-up, no cap            |
