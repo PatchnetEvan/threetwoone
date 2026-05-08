@@ -832,7 +832,12 @@ async function adminPublish() {
         description: rest.join("\n").trim(),
       }),
     });
-    if (res.status === 401) { setAdminStatus("Not authorized. Log in via Access first.", "err"); return; }
+    if (res.status === 401) {
+      const body = await res.json().catch(() => ({}));
+      const r = body.reason || "unknown";
+      setAdminStatus(`Not authorized (${r}). See worker.js for what each reason means.`, "err");
+      return;
+    }
     if (!res.ok) { setAdminStatus(`Failed: ${res.status}`, "err"); return; }
     const { entry } = await res.json();
     state.serverWorkouts[date] = entry;
@@ -853,7 +858,11 @@ async function adminDelete() {
       method: "DELETE",
       credentials: "include",
     });
-    if (res.status === 401) { setAdminStatus("Not authorized.", "err"); return; }
+    if (res.status === 401) {
+      const body = await res.json().catch(() => ({}));
+      setAdminStatus(`Not authorized (${body.reason || "unknown"}).`, "err");
+      return;
+    }
     if (!res.ok) { setAdminStatus(`Failed: ${res.status}`, "err"); return; }
     delete state.serverWorkouts[date];
     renderWorkout();
