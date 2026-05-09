@@ -24,8 +24,10 @@ export default {
         return await handleGet(url, env);
       }
       if (pathname === "/api/admin/wod") {
-        const user = await verifyAccess(request, env);
-        if (!user) return json({ error: "unauthorized" }, 401);
+        const result = await verifyAccess(request, env);
+        if (!result.ok) {
+          return json({ error: "unauthorized", reason: result.reason }, 401);
+        }
         if (request.method === "POST")   return await handlePost(request, env);
         if (request.method === "DELETE") return await handleDelete(url, env);
         return json({ error: "method not allowed" }, 405);
@@ -73,41 +75,59 @@ async function handleDelete(url, env) {
 //
 // Cloudflare Access signs an RS256 JWT for every authenticated request
 // and puts it in `Cf-Access-Jwt-Assertion`. We verify:
-//   1. Signature against the team's public JWKS
-//   2. `aud` matches our Access application AUD tag (env.ACCESS_AUD)
-//   3. `exp` has not passed
-//   4. `iss` matches our team domain
-// Without all four, reject. This makes a broken/disabled Access policy
-// fail closed rather than fail open.
+//   1. Header is present (Access proxied this request)
+//   2. Both env secrets are configured
+//   3. Token is well-formed and uses RS256
+//   4. `aud` matches our Access application AUD tag (env.ACCESS_AUD)
+//   5. `iss` matches our team domain
+//   6. `exp` has not passed
+//   7. Signature validates against the team's public JWKS
+//
+// Returns { ok: true, user } on success, { ok: false, reason } otherwise.
+// The reason is surfaced in the 401 response body so the client can
+// distinguish "secrets unset" from "audience mismatch" from "expired
+// session" — turns six hours of debugging into one error message.
+
+const fail = reason => ({ ok: false, reason });
+const pass = user   => ({ ok: true, user });
 
 async function verifyAccess(request, env) {
   const jwt = request.headers.get("cf-access-jwt-assertion");
-  if (!jwt) return null;
-  if (!env.ACCESS_AUD || !env.ACCESS_TEAM_DOMAIN) return null;
+  if (!jwt) return fail("no_jwt_header");
+  if (!env.ACCESS_AUD)         return fail("env_aud_missing");
+  if (!env.ACCESS_TEAM_DOMAIN) return fail("env_team_domain_missing");
 
   const parts = jwt.split(".");
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) return fail("malformed_jwt");
   const [headerB64, payloadB64, sigB64] = parts;
 
   let header, payload;
   try {
     header = JSON.parse(b64urlToText(headerB64));
     payload = JSON.parse(b64urlToText(payloadB64));
-  } catch { return null; }
+  } catch { return fail("malformed_jwt"); }
 
-  if (header.alg !== "RS256" || !header.kid) return null;
+  if (header.alg !== "RS256") return fail("wrong_alg");
+  if (!header.kid)            return fail("missing_kid");
 
   const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-  if (!aud.includes(env.ACCESS_AUD)) return null;
-  if (typeof payload.exp !== "number" || payload.exp * 1000 < Date.now()) return null;
+  if (!aud.includes(env.ACCESS_AUD)) return fail("audience_mismatch");
+
   const expectedIss = `https://${env.ACCESS_TEAM_DOMAIN}.cloudflareaccess.com`;
-  if (payload.iss !== expectedIss) return null;
+  if (payload.iss !== expectedIss) return fail("issuer_mismatch");
+
+  if (typeof payload.exp !== "number" || payload.exp * 1000 < Date.now()) {
+    return fail("expired");
+  }
 
   // Fetch JWKS — edge-cached by Cloudflare, no in-process cache needed.
   const certsUrl = `${expectedIss}/cdn-cgi/access/certs`;
-  const certs = await fetch(certsUrl, { cf: { cacheTtl: 3600 } }).then(r => r.json());
+  let certs;
+  try {
+    certs = await fetch(certsUrl, { cf: { cacheTtl: 3600 } }).then(r => r.json());
+  } catch { return fail("jwks_fetch_failed"); }
   const jwk = certs.keys?.find(k => k.kid === header.kid);
-  if (!jwk) return null;
+  if (!jwk) return fail("kid_not_in_jwks");
 
   const key = await crypto.subtle.importKey(
     "jwk", jwk,
@@ -117,9 +137,9 @@ async function verifyAccess(request, env) {
   const data = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
   const sig = b64urlToBytes(sigB64);
   const valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, sig, data);
-  if (!valid) return null;
+  if (!valid) return fail("signature_invalid");
 
-  return { email: payload.email, sub: payload.sub };
+  return pass({ email: payload.email, sub: payload.sub });
 }
 
 function b64urlToText(s) {
