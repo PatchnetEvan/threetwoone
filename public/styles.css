@@ -407,6 +407,132 @@ body {
   .controls, .day-nav { gap: 1.25rem; }
 }
 
+/* --- Page footer (link to /wod library, kept low-key on purpose) --- */
+
+.page-footer {
+  margin-top: 1rem;
+  padding: 0.75rem 0;
+  text-align: center;
+}
+
+.footer-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 1px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.footer-link:hover { color: var(--fg); border-bottom-color: var(--muted); }
+.footer-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+  color: var(--fg);
+}
+
+/* --- Workout library (/wod page) --- */
+
+.library-area[hidden] { display: none; }
+
+.library-area {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.library-back {
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: color 120ms ease, background 120ms ease;
+}
+.library-back:hover { color: var(--fg); background: rgba(255, 255, 255, 0.05); }
+.library-back:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  color: var(--fg);
+}
+
+.library-title {
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.library-sub {
+  color: var(--muted);
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  margin: 0 0 1.5rem 0;
+}
+
+.library-list {
+  display: grid;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.library-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.library-date {
+  font-size: clamp(0.8rem, 1.2vw, 0.95rem);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-card-title {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.library-card-body {
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  white-space: pre-wrap;
+  margin: 0.25rem 0 0.5rem 0;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.library-open {
+  justify-self: start;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.library-open:hover { color: var(--fg); border-color: var(--muted); }
+.library-open:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  color: var(--fg);
+}
+
+.library-empty {
+  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  text-align: center;
+  padding: 2rem 0;
+}
+
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   .app[data-warn="true"] .timer { animation: none; }

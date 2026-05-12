@@ -872,12 +872,91 @@ async function adminDelete() {
   }
 }
 
+// ── Library view (/wod) — browseable archive of published WODs
+//
+// Lives in this file rather than a separate page because the SPA
+// fallback at the Worker level serves index.html for /wod anyway, and
+// the cost of detecting the path here is one if-check.
+
+const LIBRARY_PATHS = new Set(["/wod", "/wod/"]);
+function isLibraryPath() { return LIBRARY_PATHS.has(location.pathname); }
+
+async function bootLibrary() {
+  // Hide the timer app entirely on /wod; show only the library section
+  // plus the footer link (kept for the "back to /" path).
+  document.querySelectorAll(
+    ".timer-area, .workout-area, .controls, .day-nav, .paste-area, .admin-area, .page-footer"
+  ).forEach(el => el.hidden = true);
+  $("#library-area").hidden = false;
+  document.title = "Workout Library — boxclock";
+
+  const list = $("#library-list");
+  const empty = $("#library-empty");
+  list.innerHTML = '<p class="library-empty">Loading…</p>';
+
+  try {
+    const res = await fetch("/api/wod/recent?days=30", { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    list.innerHTML = "";
+    if (!data.entries?.length) { empty.hidden = false; return; }
+    for (const entry of data.entries) list.append(renderLibraryCard(entry));
+  } catch (err) {
+    list.innerHTML = "";
+    empty.textContent = `Couldn't load workouts (${err.message}). Try again.`;
+    empty.hidden = false;
+  }
+}
+
+function renderLibraryCard(entry) {
+  const card = document.createElement("article");
+  card.className = "library-card";
+
+  const date = document.createElement("div");
+  date.className = "library-date";
+  date.textContent = prettyLibraryDate(entry.date);
+
+  const title = document.createElement("h2");
+  title.className = "library-card-title";
+  title.textContent = entry.title || "Untitled";
+
+  const body = document.createElement("pre");
+  body.className = "library-card-body";
+  body.textContent = entry.description || "";
+
+  const open = document.createElement("a");
+  open.className = "library-open";
+  open.href = `/?date=${entry.date}`;
+  open.textContent = "Open in timer →";
+
+  card.append(date, title, body, open);
+  return card;
+}
+
+function prettyLibraryDate(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(undefined, {
+    weekday: "long", year: "numeric", month: "long", day: "numeric"
+  });
+}
+
 // ── Boot
 async function boot() {
+  if (isLibraryPath()) return bootLibrary();
+
   Audio.init();
   loadPersisted();
   $("#btn-mute").textContent = Audio.muted ? "Sound Off" : "Sound On";
   $("#btn-mute").setAttribute("aria-pressed", String(Audio.muted));
+
+  // Library cards link back to / with ?date=YYYY-MM-DD to open that
+  // day's WOD in the timer view directly.
+  const params = new URLSearchParams(location.search);
+  const dateParam = params.get("date");
+  if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    state.currentDate = dateParam;
+  }
 
   // Admin mode is scoped to the /admin path, which is Access-gated at
   // the edge. Unauthenticated visitors never reach this code — Access
@@ -905,13 +984,15 @@ async function boot() {
   // isn't blank while we hit KV.
   renderWorkout();
 
-  // Fetch today's server-published workout; swap it in if present.
-  await fetchServerWorkout(todayKey());
+  // Fetch the currently-viewed day's server-published workout; swap it
+  // in if present. (state.currentDate may be today or a ?date= override
+  // coming from a library link.)
+  await fetchServerWorkout(state.currentDate);
   renderWorkout();
 
-  // If today has no timer from the rendered entry, load the last-used preset.
-  const todayEntry = state.serverWorkouts[todayKey()] || state.workouts[todayKey()];
-  if (!todayEntry || !todayEntry.timer) {
+  // If the viewed day has no timer config, load the last-used preset.
+  const dayEntry = state.serverWorkouts[state.currentDate] || state.workouts[state.currentDate];
+  if (!dayEntry || !dayEntry.timer) {
     applyTimer({ preset: state.activePreset, ...(state.presetParams[state.activePreset] || {}) });
   }
 

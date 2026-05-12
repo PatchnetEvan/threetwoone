@@ -23,6 +23,9 @@ export default {
       if (pathname === "/api/wod" && request.method === "GET") {
         return await handleGet(url, env);
       }
+      if (pathname === "/api/wod/recent" && request.method === "GET") {
+        return await handleRecent(url, env);
+      }
       if (pathname === "/api/admin/wod") {
         const result = await verifyAccess(request, env);
         if (!result.ok) {
@@ -50,6 +53,37 @@ async function handleGet(url, env) {
   if (!raw) return json({ error: "not found" }, 404);
   // Stored as JSON already — just pass through.
   return new Response(raw, { headers: JSON_HEADERS });
+}
+
+// Returns owner-published WODs from KV for the last N days (max 90).
+// Used by the /wod library page to render a browseable archive.
+// Public read — same trust model as /api/wod.
+async function handleRecent(url, env) {
+  const daysParam = parseInt(url.searchParams.get("days") || "30", 10);
+  const days = Math.min(Math.max(daysParam || 30, 1), 90);
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const y = cutoff.getFullYear();
+  const m = String(cutoff.getMonth() + 1).padStart(2, "0");
+  const d = String(cutoff.getDate()).padStart(2, "0");
+  const cutoffKey = `wod:${y}-${m}-${d}`;
+
+  // KV list returns key names alphabetically. Since our keys are
+  // `wod:YYYY-MM-DD`, string-compare gives chronological order.
+  const list = await env.WOD.list({ prefix: "wod:" });
+  const recent = list.keys
+    .filter(k => k.name >= cutoffKey)
+    .sort((a, b) => b.name.localeCompare(a.name)); // most-recent first
+
+  const entries = (await Promise.all(recent.map(async k => {
+    const raw = await env.WOD.get(k.name);
+    if (!raw) return null;
+    try { return { date: k.name.slice(4), ...JSON.parse(raw) }; }
+    catch { return null; }
+  }))).filter(Boolean);
+
+  return json({ entries, days });
 }
 
 async function handlePost(request, env) {
