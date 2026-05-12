@@ -76,6 +76,18 @@
         <span id="admin-status" class="admin-status" aria-live="polite"></span>
       </div>
     </section>
+
+    <section class="library-area" id="library-area" hidden>
+      <a href="/" class="library-back">&larr; Back to timer</a>
+      <h1 class="library-title">Workout Library</h1>
+      <p class="library-sub" id="library-sub">Recent published workouts</p>
+      <div id="library-list" class="library-list" aria-live="polite"></div>
+      <p id="library-empty" class="library-empty" hidden>No published workouts yet.</p>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/wod" class="footer-link">Browse workout library &rarr;</a>
+    </footer>
   </main>
 
   <dialog id="config-dialog" class="config-dialog" aria-labelledby="config-title">
