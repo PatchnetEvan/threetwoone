@@ -23,7 +23,11 @@
     </section>
 
     <section class="workout-area">
-      <div class="workout-date" id="workout-date"></div>
+      <div class="date-row">
+        <button id="btn-date-prev" class="date-arrow" type="button" aria-label="Previous day">&lsaquo;</button>
+        <div class="workout-date" id="workout-date"></div>
+        <button id="btn-date-next" class="date-arrow" type="button" aria-label="Next day">&rsaquo;</button>
+      </div>
       <h1 id="workout-title" class="workout-title">No workout loaded</h1>
       <pre id="workout-body" class="workout-body"></pre>
     </section>
@@ -33,7 +37,18 @@
       <button id="btn-pause" class="btn" type="button" disabled>Pause</button>
       <button id="btn-reset" class="btn" type="button">Reset</button>
       <button id="btn-config" class="btn" type="button">Config</button>
-      <button id="btn-mute" class="btn" type="button" aria-pressed="false">Sound On</button>
+      <button id="btn-mute" class="btn btn-icon" type="button" aria-pressed="false" aria-label="Toggle sound">
+        <svg class="icon icon-sound-on" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        <svg class="icon icon-sound-off" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <line x1="23" y1="9" x2="17" y2="15"/>
+          <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>
+      </button>
     </nav>
 
     <nav class="day-nav" aria-label="Day navigation">

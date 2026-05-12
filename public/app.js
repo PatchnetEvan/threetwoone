@@ -538,6 +538,10 @@ async function gotoDate(date) {
 $("#btn-prev").addEventListener("click", () => gotoDate(shiftDate(state.currentDate, -1)));
 $("#btn-next").addEventListener("click", () => gotoDate(shiftDate(state.currentDate, +1)));
 $("#btn-today").addEventListener("click", () => gotoDate(todayKey()));
+// The chevrons above the workout title duplicate prev/next for a more
+// picker-like feel right next to the date label itself.
+$("#btn-date-prev").addEventListener("click", () => gotoDate(shiftDate(state.currentDate, -1)));
+$("#btn-date-next").addEventListener("click", () => gotoDate(shiftDate(state.currentDate, +1)));
 
 // ── Paste box
 $("#btn-paste-save").addEventListener("click", () => {
@@ -578,7 +582,7 @@ $("#btn-paste-clear").addEventListener("click", () => {
 // ── Mute
 function toggleMute() {
   Audio.setMuted(!Audio.muted);
-  $("#btn-mute").textContent = Audio.muted ? "Sound Off" : "Sound On";
+  // The button is icon-only now — aria-pressed drives which SVG shows via CSS.
   $("#btn-mute").setAttribute("aria-pressed", String(Audio.muted));
 }
 
@@ -876,7 +880,6 @@ async function adminDelete() {
 async function boot() {
   Audio.init();
   loadPersisted();
-  $("#btn-mute").textContent = Audio.muted ? "Sound Off" : "Sound On";
   $("#btn-mute").setAttribute("aria-pressed", String(Audio.muted));
 
   // Admin mode is scoped to the /admin path, which is Access-gated at
